@@ -22,32 +22,27 @@ public class FraudDroolsService {
 
     public Transaction evaluateAndSave(Transaction transaction) {
 
-        FraudContext context =
-                FraudContext.builder()
-                        .transaction(transaction)
-                        .build();
+        transaction.setRiskScore(0);
 
         KieSession kieSession =
                 kieContainer.newKieSession("fraudSession");
 
-        kieSession.insert(context);
+        kieSession.insert(transaction);
 
-        kieSession.fireAllRules();
+        int fired = kieSession.fireAllRules();
+
+        System.out.println("Rules Fired : " + fired);
 
         kieSession.dispose();
 
-        transaction.setRiskScore(
-                context.getScore());
+        int score = transaction.getRiskScore();
 
-        transaction.setReasons(
-                String.join(", ", context.getReasons()));
-
-        if(context.getScore() <= 30) {
+        if(score <= 30) {
 
             transaction.setDecision(
                     TransactionDecision.SAFE);
 
-        } else if(context.getScore() <= 60) {
+        } else if(score <= 60) {
 
             transaction.setDecision(
                     TransactionDecision.REVIEW);

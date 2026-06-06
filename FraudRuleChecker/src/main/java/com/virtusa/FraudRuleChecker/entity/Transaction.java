@@ -40,4 +40,31 @@ public class Transaction {
 
     @Column(length = 1000)
     private String reasons;
+
+    // ----------------------------
+    // DROOLS HELPER FIELDS
+    // ----------------------------
+
+    @Transient
+    private boolean newPayee;
+
+    @Transient
+    private boolean locationDifferent;
+
+    // ----------------------------
+    // HELPER METHODS
+    // ----------------------------
+
+    public int getHour() {
+        return timestamp != null ? timestamp.getHour() : 0;
+    }
+
+    public void addReason(String reason) {
+
+        if (this.reasons == null || this.reasons.isBlank()) {
+            this.reasons = reason;
+        } else {
+            this.reasons += ", " + reason;
+        }
+    }
 }
