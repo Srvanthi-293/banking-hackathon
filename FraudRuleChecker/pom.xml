@@ -74,6 +74,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.drools</groupId>
+			<artifactId>drools-xml-support</artifactId>
+			<version>8.44.0.Final</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.kie</groupId>
 			<artifactId>kie-ci</artifactId>
 			<version>8.44.0.Final</version>

@@ -1,6 +1,6 @@
 package rules
 
-import com.example.fraud.entity.Transaction
+
 import com.virtusa.FraudRuleChecker.entity.Transaction
 
 /*
