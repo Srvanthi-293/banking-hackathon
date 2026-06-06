@@ -41,7 +41,7 @@ public class TransactionController {
 
     @PostMapping("/upload")
     public ResponseEntity<String> uploadCsv(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("\"C:\\Users\\VIRTUSA\\Downloads\\transactions.csv\"") MultipartFile file) {
 
         transactionService.uploadCsv(file);
 
