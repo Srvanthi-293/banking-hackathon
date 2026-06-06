@@ -8,96 +8,69 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+
+
+import com.virtusa.FraudRuleChecker.dto.ExcelTransactionDTO;
+import com.virtusa.FraudRuleChecker.dto.TransactionResponseDTO;
+import com.virtusa.FraudRuleChecker.entity.Customer;
+import com.virtusa.FraudRuleChecker.entity.Transaction;
+import com.virtusa.FraudRuleChecker.repository.CustomerRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private final TransactionRepository transactionRepository;
+    private final ExcelReaderService excelReaderService;
+    private final FraudDroolsService fraudDroolsService;
+    private final CustomerRepository customerRepository;
 
-    public Transaction saveTransaction(Transaction transaction) {
-        return transactionRepository.save(transaction);
-    }
+    public List<TransactionResponseDTO> processExcel(
+            MultipartFile file)
+            throws Exception {
 
-    public List<Transaction> getAllTransactions() {
-        return transactionRepository.findAll();
-    }
+        List<ExcelTransactionDTO> excelRows =
+                excelReaderService.readExcel(file);
 
-    public Transaction getTransactionById(Long id) {
-        return transactionRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Transaction not found with id : " + id));
-    }
+        List<TransactionResponseDTO> response =
+                new ArrayList<>();
 
-    public String uploadCsv(MultipartFile file) {
+        for(ExcelTransactionDTO row : excelRows) {
 
-        // CSV Parsing Logic
-        // Read file and save transactions into DB
+            Customer customer =
+                    customerRepository.findById(
+                                    row.getCustomerId())
+                            .orElseThrow();
 
-        return "CSV Uploaded Successfully";
-    }
+            Transaction transaction =
+                    Transaction.builder()
+                            .customer(customer)
+                            .amount(row.getAmount())
+                            .payee(row.getPayee())
+                            .timestamp(row.getTimestamp())
+                            .transactionCity(
+                                    row.getTransactionCity())
+                            .build();
 
-    public Transaction analyzeTransaction(Long id) {
+            Transaction saved =
+                    fraudDroolsService
+                            .evaluateAndSave(transaction);
 
-        Transaction transaction = getTransactionById(id);
-
-        int riskScore = 0;
-
-        // Rule 1 - High Amount
-        if (transaction.getAmount() > 50000) {
-            riskScore += 30;
+            response.add(
+                    TransactionResponseDTO.builder()
+                            .transactionId(saved.getId())
+                            .amount(saved.getAmount())
+                            .riskScore(saved.getRiskScore())
+                            .decision(saved.getDecision())
+                            .build()
+            );
         }
 
-        // Rule 2 - Odd Hour
-        int hour = transaction.getTransactionDateTime().getHour();
-
-        if (hour >= 1 && hour <= 4) {
-            riskScore += 15;
-        }
-
-        transaction.setRiskScore(riskScore);
-
-        if (riskScore <= 30) {
-            transaction.setDecision("SAFE");
-        } else if (riskScore <= 60) {
-            transaction.setDecision("REVIEW");
-        } else {
-            transaction.setDecision("FRAUD");
-        }
-
-        return transactionRepository.save(transaction);
-    }
-
-    public List<Transaction> analyzeAllTransactions() {
-
-        List<Transaction> transactions =
-                transactionRepository.findAll();
-
-        transactions.forEach(txn -> {
-
-            int riskScore = 0;
-
-            if (txn.getAmount() > 50000) {
-                riskScore += 30;
-            }
-
-            int hour = txn.getTransactionDateTime().getHour();
-
-            if (hour >= 1 && hour <= 4) {
-                riskScore += 15;
-            }
-
-            txn.setRiskScore(riskScore);
-
-            if (riskScore <= 30) {
-                txn.setDecision("SAFE");
-            } else if (riskScore <= 60) {
-                txn.setDecision("REVIEW");
-            } else {
-                txn.setDecision("FRAUD");
-            }
-
-        });
-
-        return transactionRepository.saveAll(transactions);
+        return response;
     }
 }

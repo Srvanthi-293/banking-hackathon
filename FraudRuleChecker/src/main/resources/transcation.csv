@@ -1,0 +1,4 @@
+customerId,amount,payee,timestamp,transactionCity
+1,2000,Grocery,2026-06-06T13:00:00,Chennai
+1,75000,NewPayee,2026-06-06T14:00:00,Chennai
+1,90000,NewPayee,2026-06-06T03:00:00,Mumbai
