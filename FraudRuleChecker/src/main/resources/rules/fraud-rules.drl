@@ -1,0 +1,63 @@
+package rules
+
+import com.example.fraud.entity.Transaction
+import com.virtusa.FraudRuleChecker.entity.Transaction
+
+/*
+ * Rule 1 : High Amount
+ * Amount > 50000
+ * Score = 30
+ */
+
+rule "High Amount Transaction"
+when
+    $txn : Transaction(amount > 50000)
+then
+    $txn.setRiskScore($txn.getRiskScore() + 30);
+    $txn.addReason("High Amount Transaction (> 50000)");
+end
+
+
+/*
+ * Rule 2 : New Payee
+ * Score = 20
+ */
+
+rule "New Payee Transaction"
+when
+    $txn : Transaction(isNewPayee == true)
+then
+    $txn.setRiskScore($txn.getRiskScore() + 20);
+    $txn.addReason("New Payee");
+end
+
+
+/*
+ * Rule 3 : Odd Hour
+ * Between 1 AM and 4 AM
+ * Score = 15
+ */
+
+rule "Odd Hour Transaction"
+when
+    $txn : Transaction(hour >= 1 && hour <= 4)
+then
+    $txn.setRiskScore($txn.getRiskScore() + 15);
+    $txn.addReason("Transaction during odd hours");
+end
+
+
+/*
+ * Rule 4 : Unusual Location
+ * Score = 25
+ */
+
+rule "Unusual Location"
+when
+    $txn : Transaction(locationDifferent == true)
+then
+    $txn.setRiskScore($txn.getRiskScore() + 25);
+    $txn.addReason("Location different from home city");
+end
+
+
